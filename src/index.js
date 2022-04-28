@@ -12,8 +12,12 @@ const books = [
   {
     title: "Jurassic Park",
     author: "Michael Crichton"
+  },
+  {
+    title : "El perfume",
+    author: "Patrikck Suskind"
   }
-];
+]; 
 
 // Type definitions define the "shape" of your data and specify
 // which ways the data can be fetched from the GraphQL server.
@@ -25,11 +29,24 @@ const typeDefs = gql`
     title: String
     author: String
   }
-
+  enum CharacterStatus{
+    Alive
+    Dead
+    unknown
+  }
+  type Character{
+    name: String
+    id: ID
+    image:String
+    status: CharacterStatus
+    episodes: [String]
+  } 
   # The "Query" type is the root of all GraphQL queries.
   # (A "Mutation" type will be covered later on.)
   type Query {
-    books: [Book]
+    books: [Book] 
+    characters : [Character]
+    character(id:ID!): Character
   }
 `;
 
@@ -37,9 +54,23 @@ const typeDefs = gql`
 // schema.  We'll retrieve books from the "books" array above.
 const resolvers = {
   Query: {
-    books: () => books
-  }
+    books: () => books,
+    characters: (parent)=> fetchCharacters(),
+    character: (parent,args)=>{
+      const {id}=args
+      return fetchCharacter({id})
+    }
+  }  
 };
+const fetchCharacters =()=>{
+  return fetch('https://rickandmortyapi.com/api/character')
+   .then(res=> res.json())
+   .then(res=>res.results)
+}
+const fetchCharacter =({id})=>{
+  return fetch(`https://rickandmortyapi.com/api/character/${id}`)
+   .then(res=> res.json())
+}
 
 // In the most basic sense, the ApolloServer can be started
 // by passing type definitions (typeDefs) and the resolvers
@@ -105,12 +136,12 @@ function fetchEpisodeByUrl(url) {
     .then(json => json);
 }
 
-function fetchCharacters() {
-  // More info about the fetch function? https://github.com/bitinn/node-fetch#json
-  return fetch("https://rickandmortyapi.com/api/character/")
-    .then(res => res.json())
-    .then(json => json.results);
-}
+// function fetchCharacters() {
+//   // More info about the fetch function? https://github.com/bitinn/node-fetch#json
+//   return fetch("https://rickandmortyapi.com/api/character/")
+//     .then(res => res.json())
+//     .then(json => json.results);
+// }
 
 function fetchCharacterById(id) {
   // More info about the fetch function? https://github.com/bitinn/node-fetch#json
